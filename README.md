@@ -1,6 +1,8 @@
 # Assignment Solutions
 ## Table of Content
 - [How to setup](#how-to-setup)
+    - [Setup python env](#setup-python-environment)
+    - [Setup mysql Server](#set-up-mysql-server)
 - [Level 1 solution](#level-1)
     - [How to run](#run-run-data-cleaning-pipeline)
     - [File Setup](#file-setup)
@@ -26,7 +28,18 @@
     ```bash
     source .venv/bin/activate
     ``` 
-## Level 1
+
+### Set up mysql server
+        
+If docker is install run following command.
+
+```
+docker run -p 3306:3306 -e MYSQL_USER=admin -e MYSQL_PASSWORD=admin -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=default mysql:latest
+```
+![Alt text](media/level_2_mysql_setup.png "Cleaned the logs")
+
+
+## **Level 1**
 In this problem we have to extract log data from files in `application` directory, clean it and store in single json format at `level_1/result/cleaned_logs.json`.
 
 ### **Run run data cleaning pipeline**
@@ -77,27 +90,15 @@ Table name is `Logs`
 +------------------+--------------+------+-----+---------+-------+
 ```
 
-## Level 2
+## **Level 2**
 - In this problem we have to injest cleaned log data to mysql database.
-- I used `sqlalchemy` orm to create schema and data injestion.
-- Here I ran mysql docker container.
+- I used `sqlalchemy` ORM to create schema and data injestion.
+- Here I ran mysql docker container. See [Setup mysql](#set-up-mysql-server) section.
 
-    <details>
-        <summary><b>Set up mysql server</b></summary>
-        If docker is install run following command.
 
-        ```bash
-        docker run -p 3306:3306 -e MYSQL_USER=admin -e MYSQL_PASSWORD=admin -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=default mysql:latest
-        ```
-        ![Alt text](media/level_2_mysql_setup.png "a title")
-    </details>
-
-    <details>
-        <summary><b>Add sql connection in project</b></summary>
-
-        - Open file `level_2/connection.py`
-        - Here you can add connection string by modifying `connection_str` variable.
-    </details>
+### Add sql connection in project
+- Open file `level_2/connection.py`
+- Here you can add connection string by modifying `connection_str` variable.
 
 
 ### Run injestion pipeline
@@ -145,10 +146,11 @@ level_2
 ```
 
 
-## Level 3
+## **Level 3**
 In this problem we have to run two sql quries on database. Data details can we seen in this [section](#data-details)
 
 **Query 1** 
+
 Oncology specialization rate: Calculate the ratio of applications for oncology trials to the total number of applications for each Academic site.
 
 ```mysql
@@ -163,6 +165,7 @@ group by site_name;
 ![Alt text](media/level_3_sql_1.png "a title")  
 
 **Query 2**
+
 List of sites: Provide a list of sites that applied to at least 10 trials during the 14 days following their first application.
 
 ```mysql
