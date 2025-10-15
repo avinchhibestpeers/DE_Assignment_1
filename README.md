@@ -1,83 +1,62 @@
-# Inato Data Engineering technical assignment
-
-## How to Successfully Complete this Technical Assignment
-
-Follow the steps below to successfully complete the assignment and showcase your skills:
-
-1. Clone the repository provided (do **not** fork it).
-2. Work through each step, starting with Step 1.
-3. Commit your code at the end of each step to track your progress.
-4. Publish it on your GitHub (or Gitlab, or whatever...)
-5. Send us the link and tell us approximatively how much time you spent on this assignment
-
-Note that the test should take no more than 3 hours to complete. 
-The test is simple enough intentionally so you can spend time on making it production ready.
+# Assignment Solutions
+## Table of Content
+- [How to setup](#how-to-setup)
+- [Level 1 solution](#level-1)
+    - [How to run](#run-run-data-cleaning-pipeline)
+    - [File Setup](#file-setup)
+- [Data Details](#data-details)
+    - [Schema](#schmea)
+- [Level 2 solution](#level-2)
+    - [How to run](#run-injestion-pipeline)
+    - [File Setup](#file-setup-1)
+- [Level 3 solution](#level-3)
 
 
-## Guidelines for Success
+## How to setup
+### Setup Python Environment
+1. [Install uv](https://docs.astral.sh/uv/getting-started/installation/#standalone-installer)
 
-To ensure success and demonstrate your abilities, please adhere to the following guidelines:
+2. Install depedencies and create virtual environment run following command.
 
-- Begin with a simple approach to complete the initial steps.
-- Each step builds upon the previous one, allowing you to reuse code when applicable. However, as you progress, focus on refactoring your code to make it maintainable, clean, robust, and reliable.
-- The last state of your code should be clean and ready to be reviewed by peers in a real-world situation
-- Use Python (3.9) to write your code.
-- Write your program within the appropriate level directory.
-- Do not modify the following scripts: `application_generator.py` and `application_file_generator.py`.
+    ```bash
+    uv sync
+    ```
 
+3. Activate virtual environment run following command:
+    ```bash
+    source .venv/bin/activate
+    ``` 
+## Level 1
+In this problem we have to extract log data from files in `application` directory, clean it and store in single json format at `level_1/result/cleaned_logs.json`.
 
-## Step 1 : Transforming Application Logs
+### **Run run data cleaning pipeline**
+- Be in root directory.
+- Run following command:
 
-- Run the `application_file_generator.py` program to generate application logs. The logs will be saved in the `./applications/` folder. Each file represents one application and follows this format:
+    ```bash
+    python3 -m level_1.main
+    ```
+    **Output:** 
 
-`id=0a0bd4d3-05cf-4912-b6ee-40d79a4f9901|therapeutic_area=oncology|created_at=2023-07-26 18:30:07|site={'name': 'CHU Bordeaux', 'site_category': 'academic'}`
+    ![Alt text](media/level_1_demo.png "Cleaned the logs")
 
-- Your task is to read all these files and transform them into JSON files in the `./processed/application-{id}.json` format. The transformed JSON files should look like this:
-
+### File setup
 ```
-{
-   'id':'0a0bd4d3-05cf-4912-b6ee-40d79a4f9901',
-   'therapeutic_area':'oncology',
-   'created_at':'2023-07-26 18:30:07',
-   'site':{
-      'name':'CHU Bordeaux',
-      'category':'academic'
-   }
-}
+level_1
+├── __init__.py
+├── clean_logs.py # convert logs in json format
+├── get_logs.py  # extract raw logs from log files
+├── main.py
+├── pipeline.py
+├── result
+│   └── cleaned_logs.json
+└── store_logs.py # store cleaned logs json file
 ```
-
-## Step 2 : Storing Application Logs in a MySQL Database
-
-- Instead of writing the logs to files, we want to store them in a MySQL database.
-- Use the following table schema to create a table named `application`:
-
-```
-CREATE TABLE application(
-   id varchar(100),
-   therapeutic_area varchar(10),
-   created_at timestamp,
-   site_name varchar(50),
-   site_category varchar(20)
-)
-```
-
-## Step 3 : Answering Questions based on the Stored Data
-
-Based on the previously created table, you need to answer the following questions:
-
-- Oncology specialization rate: Calculate the ratio of applications for oncology trials to the total number of applications for each Academic site.
-- List of sites: Provide a list of sites that applied to at least 10 trials during the 14 days following their first application.
-
-Write your SQL queries to answer these questions in the level_3/queries.sql file.
-
-Note:
-- If you haven't completed step 2, you can use the data stored in `./sample/applications_sample.csv`.
-- There is no requirement to set up a database. We will solely focus on the SQL code.
-
 
 ## Data details
 
 **Trial applications on Inato:**
+Table name is `Logs`
 
 - `id`: application ID
 - `therapeutic_area`: therapeutic area of the study for which the site is applying
@@ -85,5 +64,119 @@ Note:
 - `site_name`: name of the site who took part in the trial
 - `site_category`: category the site who took part in the trial
 
+### Schmea
+```
++------------------+--------------+------+-----+---------+-------+
+| Field            | Type         | Null | Key | Default | Extra |
++------------------+--------------+------+-----+---------+-------+
+| id               | varchar(100) | NO   | PRI | NULL    |       |
+| therapeutic_area | varchar(100) | NO   |     | NULL    |       |
+| created_at       | datetime     | NO   |     | NULL    |       |
+| site_name        | varchar(100) | NO   |     | NULL    |       |
+| site_category    | varchar(100) | NO   |     | NULL    |       |
++------------------+--------------+------+-----+---------+-------+
+```
 
-## Enjoy the assignment and good luck! ##
+## Level 2
+- In this problem we have to injest cleaned log data to mysql database.
+- I used `sqlalchemy` orm to create schema and data injestion.
+- Here I ran mysql docker container.
+
+    <details>
+        <summary><b>Set up mysql server</b></summary>
+        If docker is install run following command.
+
+        ```bash
+        docker run -p 3306:3306 -e MYSQL_USER=admin -e MYSQL_PASSWORD=admin -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=default mysql:latest
+        ```
+        ![Alt text](media/level_2_mysql_setup.png "a title")
+    </details>
+
+    <details>
+        <summary><b>Add sql connection in project</b></summary>
+
+        - Open file `level_2/connection.py`
+        - Here you can add connection string by modifying `connection_str` variable.
+    </details>
+
+
+### Run injestion pipeline
+Make sure you setup mysql server. Instruction  given above.
+
+Run following command:
+```bash
+python3 -m level_2.main
+```
+
+![Alt text](media/level_2_demo.png "a title")
+
+### **Check data injested or not**
+- Run following command and copy mysql `CONTAINER ID`.
+    ```
+    docker ps
+    ```
+- Run following command to enter mysql terminal, 
+    - Replace <container id> with previously copyed container id.
+    - Replace <username> with `admin`.
+    ```bash
+    docker exec -it <container id> mysql -u admin -p 
+    ```
+- It will prompt you to enter password i.e `admin`, by default.
+- Change db
+    ```mysql
+    use default
+    ``` 
+- See rows
+    ```mysql
+    select * from Logs limit 2;
+    ```
+
+    ![Alt text](media/level_2_check.png "a title")  
+
+### File setup
+
+```
+level_2
+├── connection.py
+├── ingestion.py
+├── __init__.py
+├── main.py
+└── schema.py # define schema 
+```
+
+
+## Level 3
+In this problem we have to run two sql quries on database. Data details can we seen in this [section](#data-details)
+
+**Query 1** 
+Oncology specialization rate: Calculate the ratio of applications for oncology trials to the total number of applications for each Academic site.
+
+```mysql
+select site_name,
+       sum(case when therapeutic_area = "oncology" then 1 else 0 end) / count(*) as oncology_rate
+from Logs
+where site_category = "academic"
+group by site_name;
+```
+**Output** 
+
+![Alt text](media/level_3_sql_1.png "a title")  
+
+**Query 2**
+List of sites: Provide a list of sites that applied to at least 10 trials during the 14 days following their first application.
+
+```mysql
+select x.site_name, count(*)
+from (select
+          site_name,
+          date(created_at) event_date,
+          min(date(created_at)) over (partition by site_name) as min_date
+    from Logs) as x
+where event_date between min_date and adddate(min_date, 14)
+group by site_name
+having count(*) >= 10;
+```
+
+**Output** 
+
+![Alt text](media/level_3_sql_2.png "a title") 
